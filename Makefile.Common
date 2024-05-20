@@ -1,0 +1,29 @@
+SHELL = /bin/bash
+.SHELLFLAGS = -o pipefail -c
+
+SRC_ROOT := $(shell pwd)
+GOOS=$(shell $(GOCMD) env GOOS)
+GOARCH=$(shell $(GOCMD) env GOARCH)
+GOCMD?= go
+
+
+# tools manage
+TOOLS_MOD_DIR    := $(SRC_ROOT)/internal/tools
+TOOLS_MOD_REGEX  := "\".*\""
+TOOLS_PKG_LINES  := $(shell grep -E $(TOOLS_MOD_REGEX) $(TOOLS_MOD_DIR)/tools.go | tr -d " _\"\t")
+TOOLS_PKG_NAMES  := $(shell echo ${TOOLS_PKG_LINES} | tr ' ' '\n' | awk -F'//' '{print $$1}')
+TOOLS_BIN_DIR    := $(SRC_ROOT)/.tools
+TOOLS_BIN_NAMES  := $(addprefix $(TOOLS_BIN_DIR)/, $(shell grep -E $(TOOLS_MOD_REGEX) $(TOOLS_MOD_DIR)/tools.go | tr -d " _\"\t" | awk -F'//' '{if(NF>1) print $$2; else print $$1}' | xargs -I {} basename {}))
+
+.PHONY: install-tools
+install-tools: $(TOOLS_BIN_NAMES)
+
+$(TOOLS_BIN_DIR):
+	mkdir -p $@
+
+$(TOOLS_BIN_NAMES): $(TOOLS_BIN_DIR) $(TOOLS_MOD_DIR)/go.mod
+	$(eval index=1)
+	$(foreach item,$(TOOLS_BIN_NAMES),\
+	$(if $(filter $@,$(item)),$(eval target_index=$(index))) \
+	$(eval index=$(shell expr $(index) + 1)))
+	cd $(TOOLS_MOD_DIR) && $(GOCMD) build -o $@ -trimpath $(word $(target_index),$(TOOLS_PKG_NAMES)) && chmod +x $@
