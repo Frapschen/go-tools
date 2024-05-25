@@ -1,5 +1,4 @@
 include Makefile.Common
 
-.PHONY: all
-all: install-tools
-
+hello-word:
+	echo Hi, Golang

@@ -2,12 +2,8 @@ SHELL = /bin/bash
 .SHELLFLAGS = -o pipefail -c
 
 SRC_ROOT := $(shell pwd)
-GOOS=$(shell $(GOCMD) env GOOS)
-GOARCH=$(shell $(GOCMD) env GOARCH)
 GOCMD?= go
 
-
-# tools manage
 TOOLS_MOD_DIR    := $(SRC_ROOT)/internal/tools
 TOOLS_MOD_REGEX  := "\".*\""
 TOOLS_PKG_LINES  := $(shell grep -E $(TOOLS_MOD_REGEX) $(TOOLS_MOD_DIR)/tools.go | tr -d " _\"\t")
